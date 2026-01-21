@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حاسبة تسعير المنتجات COD</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #070812;
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.16);
+      --text: rgba(255,255,255,.92);
+      --brand1: #8b5cf6;
+      --brand2: #22d3ee;
+      --brand3: #60a5fa;
+      --warn: #f59e0b;
+      --bad:  #ef4444;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(1200px 600px at 70% 10%, rgba(139,92,246,.22), transparent 60%),
+                  radial-gradient(900px 500px at 10% 40%, rgba(34,211,238,.18), transparent 55%),
+                  radial-gradient(900px 700px at 50% 100%, rgba(96,165,250,.16), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      overflow-x:hidden;
+      font-family: "Tajawal","Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    /* Animated blobs */
+    .bg-blobs{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:0;
+      filter: blur(70px);
+      opacity:.85;
+    }
+    .blob{
+      position:absolute;
+      width:560px; height:560px;
+      border-radius:50%;
+      mix-blend-mode: screen;
+      animation: float 18s ease-in-out infinite;
+      transform: translateZ(0);
+    }
+    .blob.a{
+      right:-180px; top:-220px;
+      background: radial-gradient(circle at 30% 30%, rgba(139,92,246,.95), rgba(34,211,238,.15) 55%, transparent 70%);
+      animation-delay: 0s;
+    }
+    .blob.b{
+      left:-220px; bottom:-240px;
+      width:620px; height:620px;
+      background: radial-gradient(circle at 30% 30%, rgba(34,211,238,.90), rgba(96,165,250,.18) 55%, transparent 70%);
+      animation-delay: 4s;
+    }
+    .blob.c{
+      left:35%; top:35%;
+      width:520px; height:520px;
+      background: radial-gradient(circle at 30% 30%, rgba(96,165,250,.85), rgba(139,92,246,.12) 55%, transparent 70%);
+      animation-delay: 8s;
+    }
+    @keyframes float{
+      0%,100%{ transform: translate(0,0) scale(1); }
+      25%{ transform: translate(60px,-40px) scale(1.06); }
+      50%{ transform: translate(-45px,55px) scale(.96); }
+      75%{ transform: translate(35px,25px) scale(1.03); }
+    }
+
+    /* Glass */
+    .glass{
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(16px);
+    }
+    .glass-strong{
+      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+      border: 1px solid var(--stroke2);
+      box-shadow: 0 22px 70px rgba(0,0,0,.50);
+      backdrop-filter: blur(18px);
+    }
+
+    .gradient-text{
+      background: linear-gradient(135deg, var(--brand1), var(--brand2), var(--brand3));
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .soft-border{ position:relative; }
+    .soft-border:before{
+      content:"";
+      position:absolute; inset:-1px;
+      border-radius: 18px;
+      padding:1px;
+      background: linear-gradient(135deg, rgba(139,92,246,.55), rgba(34,211,238,.35), rgba(96,165,250,.45));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    .premium-input{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      transition: .2s ease;
+      outline:none;
+    }
+    .premium-input:focus{
+      border-color: rgba(139,92,246,.65);
+      box-shadow: 0 0 0 4px rgba(139,92,246,.18);
+      background: rgba(255,255,255,.08);
+    }
+    .premium-input::placeholder{ color: rgba(255,255,255,.40); }
+    .premium-input:disabled{ opacity:.55; cursor:not-allowed; }
+
+    .btn{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      transition: .2s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.12); transform: translateY(-1px); }
+    .btn.active{
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,211,238,.45));
+      border-color: rgba(139,92,246,.65);
+      box-shadow: 0 12px 40px rgba(139,92,246,.25);
+    }
+
+    .btn-currency.active{
+      background: linear-gradient(135deg, rgba(34,197,94,.65), rgba(34,211,238,.35));
+      border-color: rgba(34,211,238,.35);
+      box-shadow: 0 12px 40px rgba(34,211,238,.12);
+    }
+
+    .cta{
+      position:relative;
+      overflow:hidden;
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,211,238,.55));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 18px 55px rgba(139,92,246,.28);
+      transition: .25s ease;
+    }
+    .cta:hover{ transform: translateY(-2px); box-shadow: 0 26px 75px rgba(34,211,238,.22), 0 22px 70px rgba(139,92,246,.18); }
+    .cta:before{
+      content:"";
+      position:absolute; top:-120%; left:-40%;
+      width:60%; height:320%;
+      transform: rotate(25deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+      animation: shine 2.7s ease-in-out infinite;
+      opacity:.70;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-120%) rotate(25deg); }
+      60%{ transform: translateX(240%) rotate(25deg); }
+      100%{ transform: translateX(240%) rotate(25deg); }
+    }
+
+    .stat{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 16px;
+      transition: .25s ease;
+    }
+    .stat:hover{
+      transform: translateY(-3px);
+      border-color: rgba(139,92,246,.35);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 18px 55px rgba(0,0,0,.35);
+    }
+
+    .fade-up{ animation: fadeUp .45s ease both; }
+    @keyframes fadeUp{
+      from{ opacity:0; transform: translateY(10px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    .locked-overlay{
+      position:absolute; inset:0;
+      background: rgba(0,0,0,.72);
+      border-radius: 14px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:10px;
+      padding:18px;
+      text-align:center;
+      z-index:5;
+      backdrop-filter: blur(6px);
+    }
+    .timer-pill{
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,211,238,.45));
+      font-weight:800;
+      min-width: 92px;
+      box-shadow: 0 12px 40px rgba(139,92,246,.22);
+    }
+
+    /* IMPORTANT FIX:
+       we keep results dim visually BUT do NOT block clicks anywhere else,
+       and we also avoid pointer-events:none here to prevent future issues. */
+    .results-dim{
+      opacity:.28;
+      filter: saturate(.75);
+      transition: .3s ease;
+    }
+    .results-live{
+      opacity:1;
+      filter: none;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      z-index: 50;
+      min-width: 220px;
+      max-width: calc(100vw - 32px);
+      background: rgba(0,0,0,.60);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      display:none;
+    }
+
+    /* Pro section styling */
+    .pro-hero{
+      background: linear-gradient(135deg, rgba(139,92,246,.20), rgba(34,211,238,.12));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 22px 70px rgba(0,0,0,.45);
+      backdrop-filter: blur(16px);
+    }
+    .pro-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      font-weight: 800;
+      color: rgba(255,255,255,.92);
+    }
+
+    .pro-btn{
+      position:relative;
+      overflow:hidden;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.09);
+      transition: .25s ease;
+      box-shadow: 0 16px 55px rgba(0,0,0,.28);
+    }
+    .pro-btn:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 24px 75px rgba(0,0,0,.35);
+    }
+    .pro-btn.primary{
+      background: linear-gradient(135deg, rgba(139,92,246,.92), rgba(34,211,238,.45));
+      box-shadow: 0 22px 70px rgba(139,92,246,.20);
+    }
+    .pro-btn.primary:hover{
+      box-shadow: 0 30px 90px rgba(34,211,238,.18), 0 26px 80px rgba(139,92,246,.16);
+    }
+
+    .pro-feature{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+    }
+    .pro-dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,211,238,.55));
+      box-shadow: 0 10px 30px rgba(139,92,246,.20);
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 768px){
+      .blob{ width:420px; height:420px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob a"></div>
+    <div class="blob b"></div>
+    <div class="blob c"></div>
+  </div>
+
+  <main class="relative z-10 min-h-screen p-4">
+    <div class="max-w-6xl mx-auto">
+
+      <!-- Header -->
+      <section class="glass rounded-2xl p-5 md:p-6 mb-6 fade-up soft-border">
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+
+            <!-- Language -->
+            <div class="flex items-center gap-2">
+              <button class="btn active px-4 py-2 rounded-xl text-sm font-bold" data-lang="🇩🇿 AR" onclick="changeLanguage('ar')">AR</button>
+              <button class="btn px-4 py-2 rounded-xl text-sm font-bold" data-lang="🇺🇸 EN" onclick="changeLanguage('en')">EN</button>
+              <button class="btn px-4 py-2 rounded-xl text-sm font-bold" data-lang="🇫🇷 FR" onclick="changeLanguage('fr')">FR</button>
+            </div>
+
+            <!-- Currency -->
+            <div class="flex items-center gap-2">
+              <button class="btn btn-currency active px-4 py-2 rounded-xl text-sm font-bold" data-currency="DZD" data-rate="248" onclick="changeCurrency('DZD',248)">DZD</button>
+              <button class="btn btn-currency px-4 py-2 rounded-xl text-sm font-bold" data-currency="MAD" data-rate="10.5" onclick="changeCurrency('MAD',10.5)">MAD</button>
+              <button class="btn btn-currency px-4 py-2 rounded-xl text-sm font-bold" data-currency="TND" data-rate="3.2" onclick="changeCurrency('TND',3.2)">TND</button>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <h1 class="text-3xl md:text-4xl font-black gradient-text" data-i18n="title">حاسبة تسعير المنتجات COD</h1>
+            <p class="mt-2 text-white/70 font-medium" data-i18n="subtitle">احسب السعر المثالي لمنتجك بسهولة وبشكل احترافي</p>
+
+            <div class="mt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span data-i18n="freeBadge">نسخة مجانية</span>
+              </span>
+            </div>
+          </div>
+        </div>
+<!-- Share card (Arabic only - no translation) -->
+<div class="mt-4 glass rounded-2xl p-4 md:p-5 soft-border text-center">
+  <p class="text-lg md:text-xl font-black gradient-text">
+    ساعدنا ننشر الأداة لروّاد التجارة الإلكترونية
+  </p>
+  <p class="mt-2 text-white/100 font-bold text-sm md:text-base">
+    شارك الرابط مع صديقك أو في مجموعات البيع والشراء… يمكن تفيد شخص وتزيد فرص نجاحه.
+  </p>
+
+  <div class="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+    <button id="copyToolLinkBtn"
+            class="px-5 py-3 rounded-2xl font-black border border-white/15 bg-white/10 hover:bg-white/15 transition"
+            onclick="copyToolLink()">
+      نسخ رابط الأداة
+    </button>
+
+    <button id="nativeShareBtn"
+            class="px-5 py-3 rounded-2xl font-black border border-white/15 bg-white/10 hover:bg-white/15 transition"
+            onclick="nativeShareTool()">
+      مشاركة (هاتف)
+    </button>
+
+    <a id="waShareLink"
+       class="px-5 py-3 rounded-2xl font-black border border-white/15 bg-white/10 hover:bg-white/15 transition text-center"
+       target="_blank" rel="noopener">
+      مشاركة واتساب
+    </a>
+  </div>
+
+  <p id="shareStatus" class="mt-3 text-xs font-bold text-white/60"></p>
+</div>
+
+      </section>
+
+      <!-- Main grid -->
+      <section class="grid lg:grid-cols-2 gap-6">
+
+        <!-- Inputs -->
+        <section class="glass-strong rounded-2xl p-5 md:p-6 fade-up soft-border">
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <h2 class="text-xl md:text-2xl font-extrabold" data-i18n="productInfo">معلومات المنتج</h2>
+            <span class="text-xs font-bold text-white/60" id="currencyHint"></span>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="productName">اسم المنتج (اختياري)</label>
+              <input id="productName" type="text" class="premium-input w-full px-4 py-3 rounded-xl"
+                data-i18n-placeholder="productNamePlaceholder" placeholder="مثال: ساعة ذكية" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="wholesalePrice">سعر الشراء بالجملة</label>
+              <input id="wholesalePrice" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl"
+                data-i18n-placeholder="wholesalePricePlaceholder" placeholder="مثال: 1200" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="exchangeRate">سعر الصرف</label>
+              <input id="exchangeRate" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl" />
+              <p class="text-xs text-white/50 mt-1" data-i18n="exchangeHint">مثال: 248248 (تحويل الدولار/العملة إلى عملتك)</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="dailyBudget">ميزانية الإعلانات اليومية ($)</label>
+                <input id="dailyAdSpend" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl"
+                  data-i18n-placeholder="dailyBudgetPlaceholder" placeholder="مثال: 20" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="costPerOrder">تكلفة الطلب (CPO) ($)</label>
+                <input id="costPerOrder" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl"
+                  data-i18n-placeholder="costPerOrderPlaceholder" placeholder="مثال: 2.5" />
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="relative">
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="confirmationRate">نسبة التأكيد (%)</label>
+                <input id="confirmationRate" type="number" inputmode="decimal" min="0" max="100"
+                  class="premium-input w-full px-4 py-3 rounded-xl" data-i18n-placeholder="confirmationRatePlaceholder" placeholder="مثال: 60" />
+                <div id="confirmationLock" class="locked-overlay">
+                  <div class="timer-pill"><span id="confirmTimer">60</span>s</div>
+                  <p class="text-white font-extrabold leading-relaxed" data-i18n="upgradeMessage">هذه الميزة مقفلة في النسخة المجانية</p>
+                  <a href="https://wa.me/213540018556" target="_blank" class="pro-btn primary px-6 py-2 text-center">
+                    <span data-i18n="upgradeNow">ترقية الآن</span>
+                  </a>
+                </div>
+              </div>
+
+              <div class="relative">
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="deliveryRate">نسبة التسليم (%)</label>
+                <input id="deliveryRate" type="number" inputmode="decimal" min="0" max="100"
+                  class="premium-input w-full px-4 py-3 rounded-xl" data-i18n-placeholder="deliveryRatePlaceholder" placeholder="مثال: 80" />
+                <div id="deliveryLock" class="locked-overlay">
+                  <div class="timer-pill"><span id="deliveryTimer">60</span>s</div>
+                  <p class="text-white font-extrabold leading-relaxed" data-i18n="upgradeMessage">هذه الميزة مقفلة في النسخة المجانية</p>
+                  <a href="https://wa.me/213540018556" target="_blank" class="pro-btn primary px-6 py-2 text-center">
+                    <span data-i18n="upgradeNow">ترقية الآن</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="additionalCosts">مصاريف إضافية (تغليف/توصيل...)</label>
+                <input id="additionalCosts" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl"
+                  data-i18n-placeholder="additionalCostsPlaceholder" placeholder="مثال: 200" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="desiredProfit">الربح المطلوب لكل طلب (اختياري)</label>
+                <input id="desiredProfit" type="number" inputmode="decimal" class="premium-input w-full px-4 py-3 rounded-xl"
+                  data-i18n-placeholder="desiredProfitPlaceholder" placeholder="مثال: 900" />
+                <p class="text-xs text-white/50 mt-1" data-i18n="desiredProfitHint">إذا تركته فارغاً سيتم اعتماد هامش افتراضي (تقريباً 50%).</p>
+              </div>
+            </div>
+
+            <button class="cta w-full py-4 rounded-2xl font-black text-lg" onclick="calculatePrice()" data-i18n="calculateBtn">
+              احسب السعر المثالي
+            </button>
+
+            <div id="recommendedPriceSection" class="hidden fade-up">
+              <label class="block text-sm font-bold text-white/85 mb-2" data-i18n="recommendedPrice">سعر البيع المقترح</label>
+              <div class="glass rounded-2xl p-4 text-center soft-border">
+                <div id="recommendedPriceValue" class="text-4xl md:text-5xl font-black gradient-text">0</div>
+                <div id="recommendedCurrencyLabel" class="mt-2 text-white/70 font-bold">DZD</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Results -->
+        <section class="space-y-5 fade-up results-dim" id="resultsSection">
+          <div class="glass-strong rounded-2xl p-5 md:p-6 soft-border">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-lg md:text-xl font-extrabold" data-i18n="netProfit">الربح الصافي لكل طلب</h3>
+              <span class="text-xs font-bold text-white/60" id="currencyLabel">DZD</span>
+            </div>
+
+            <div class="mt-3">
+              <div id="profitValue" class="text-4xl md:text-5xl font-black gradient-text">0</div>
+              <p class="mt-2 text-white/60 text-sm font-bold" id="profitHint"></p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="dailyOrdersLabel">الطلبات اليومية</div>
+              <div id="dailyOrders" class="mt-2 text-2xl font-black text-sky-300">0</div>
+            </div>
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="dailyProfitLabel">الربح اليومي</div>
+              <div id="dailyProfit" class="mt-2 text-2xl font-black text-emerald-300">0</div>
+            </div>
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="adCostLabel">تكلفة الإعلان/طلب</div>
+              <div id="adCost" class="mt-2 text-2xl font-black text-rose-300">0</div>
+            </div>
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="totalCostLabel">التكلفة الإجمالية</div>
+              <div id="totalCost" class="mt-2 text-2xl font-black text-amber-300">0</div>
+            </div>
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="suggestedPriceLabel">سعر البيع</div>
+              <div id="suggestedPrice" class="mt-2 text-2xl font-black text-violet-300">0</div>
+            </div>
+            <div class="stat">
+              <div class="text-xs text-white/55 font-extrabold" data-i18n="roiLabel">ROI</div>
+              <div id="roi" class="mt-2 text-2xl font-black text-emerald-300">0%</div>
+            </div>
+          </div>
+
+          <button id="refreshButton" class="hidden w-full py-3 rounded-2xl font-black text-base bg-blue-600 hover:bg-blue-700 transition"
+                  onclick="refreshPage()" data-i18n="refreshBtn">
+            إعادة حساب / تحديث الصفحة
+          </button>
+        </section>
+      </section>
+
+      <!-- PRO SECTION (always clickable from first load) -->
+      <section class="mt-6 pro-hero rounded-2xl p-5 md:p-6 fade-up soft-border">
+        <div class="text-center">
+          <div class="inline-flex items-center justify-center gap-2 mb-3">
+            <span class="pro-pill">
+              <span class="inline-block w-2 h-2 rounded-full" style="background:linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,211,238,.55));"></span>
+              <span data-i18n="proTitle">النسخة الاحترافية متوفرة الآن!</span>
+            </span>
+          </div>
+
+          <p class="text-white/75 font-bold text-base md:text-lg" data-i18n="proSubtitle">
+            احصل على جميع الميزات المتقدمة لتحليل شامل ودقيق
+          </p>
+
+          <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a id="youtubeLink"
+               href="https://www.youtube.com/pricing-tool-toturial"
+               target="_blank"
+               class="pro-btn primary w-full sm:w-auto min-w-[240px] text-center inline-flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              <span data-i18n="watchVideo">شاهد فيديو شرح الأداة الاحترافية</span>
+            </a>
+
+            <a id="waLink"
+               href="https://wa.me/213540018556"
+               target="_blank"
+               class="pro-btn w-full sm:w-auto min-w-[240px] text-center inline-flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/>
+              </svg>
+              <span data-i18n="contactWhatsApp">تواصل معي على الواتساب للحصول على النسخة الاحترافية</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <div class="text-center mb-4">
+            <h3 class="text-xl md:text-2xl font-black gradient-text" data-i18n="proFeaturesTitle">ميزات النسخة الاحترافية</h3>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="pro-feature"><span class="pro-dot"></span><span class="font-extrabold text-white/85" data-i18n="feature1">حساب نسب التأكيد والتسليم بدقة</span></div>
+            <div class="pro-feature"><span class="pro-dot"></span><span class="font-extrabold text-white/85" data-i18n="feature2">حساب تكلفة الإرجاع (Retour)</span></div>
+            <div class="pro-feature"><span class="pro-dot"></span><span class="font-extrabold text-white/85" data-i18n="feature3">التوقعات الشهرية (30 يوم)</span></div>
+            <div class="pro-feature"><span class="pro-dot"></span><span class="font-extrabold text-white/85" data-i18n="feature4">حاسبة العروض والخصومات</span></div>
+            <div class="pro-feature md:col-span-2"><span class="pro-dot"></span><span class="font-extrabold text-white/85" data-i18n="feature5">رسوم وبيانات تفاعلية (Charts)</span></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="glass rounded-2xl p-5 md:p-6 mt-6 text-center fade-up soft-border">
+        <p class="text-white/70 font-bold" data-i18n="madeWith">صممت بـ ❤️ من طرف</p>
+        <div class="mt-3 flex items-center justify-center gap-4 flex-wrap">
+          <a href="https://www.instagram.com/messadia.anouar" target="_blank" class="font-black text-violet-300 hover:text-violet-200 transition">messadia.anouar</a>
+          <span class="text-white/25">|</span>
+          <a href="https://t.me/digitalverse12" target="_blank" class="font-black text-sky-300 hover:text-sky-200 transition">Telegram</a>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const translations = {
+      ar: {
+        title: "حاسبة تسعير المنتجات COD",
+        subtitle: "احسب السعر المثالي لمنتجك بسهولة وبشكل احترافي",
+        freeBadge: "نسخة مجانية",
+
+        productInfo: "معلومات المنتج",
+        productName: "اسم المنتج (اختياري)",
+        productNamePlaceholder: "مثال: ساعة ذكية",
+        wholesalePrice: "سعر الشراء بالجملة",
+        wholesalePricePlaceholder: "مثال: 1200",
+        exchangeRate: "سعر الصرف",
+        exchangeHint: "مثال: 248 (تحويل الدولار/العملة إلى عملتك)",
+        dailyBudget: "ميزانية الإعلانات اليومية ($)",
+        dailyBudgetPlaceholder: "مثال: 20",
+        costPerOrder: "تكلفة الطلب (CPO) ($)",
+        costPerOrderPlaceholder: "مثال: 2.5",
+        confirmationRate: "نسبة التأكيد (%)",
+        confirmationRatePlaceholder: "مثال: 60",
+        deliveryRate: "نسبة التسليم (%)",
+        deliveryRatePlaceholder: "مثال: 80",
+        additionalCosts: "مصاريف إضافية (تغليف/توصيل...)",
+        additionalCostsPlaceholder: "مثال: 200",
+        desiredProfit: "الربح المطلوب لكل طلب (اختياري)",
+        desiredProfitPlaceholder: "مثال: 900",
+        desiredProfitHint: "إذا تركته فارغاً سيتم اعتماد هامش افتراضي (تقريباً 50%).",
+
+        calculateBtn: "احسب السعر المثالي",
+        recommendedPrice: "سعر البيع المقترح",
+
+        netProfit: "الربح الصافي لكل طلب",
+        dailyOrdersLabel: "الطلبات اليومية",
+        dailyProfitLabel: "الربح اليومي",
+        adCostLabel: "تكلفة الإعلان/طلب",
+        totalCostLabel: "التكلفة الإجمالية",
+        suggestedPriceLabel: "سعر البيع",
+        roiLabel: "ROI",
+
+        upgradeMessage: "هذه الميزة مقفلة في النسخة المجانية",
+        upgradeNow: "ترقية الآن",
+        refreshBtn: "إعادة حساب / تحديث الصفحة",
+
+        proTitle: "النسخة الاحترافية متوفرة الآن!",
+        proSubtitle: "احصل على جميع الميزات المتقدمة لتحليل شامل ودقيق",
+        watchVideo: "شاهد فيديو شرح الأداة الاحترافية",
+        contactWhatsApp: "تواصل معي على الواتساب للحصول على النسخة الاحترافية",
+
+        proFeaturesTitle: "ميزات النسخة الاحترافية",
+        feature1: "حساب نسب التأكيد والتسليم بدقة",
+        feature2: "حساب تكلفة الإرجاع (Retour)",
+        feature3: "التوقعات الشهرية (30 يوم)",
+        feature4: "حاسبة العروض والخصومات",
+        feature5: "رسوم وبيانات تفاعلية (Charts)",
+
+        madeWith: "صممت بـ ❤️ من طرف",
+        currencyHint: "العملة الحالية للنتائج:"
+      },
+      en: {
+        title: "COD Product Pricing Calculator",
+        subtitle: "Calculate the ideal price for your product with a premium UI",
+        freeBadge: "Free Version",
+
+        productInfo: "Product Information",
+        productName: "Product name (optional)",
+        productNamePlaceholder: "Example: Smart Watch",
+        wholesalePrice: "Wholesale price",
+        wholesalePricePlaceholder: "Example: 1200",
+        exchangeRate: "Exchange rate",
+        exchangeHint: "Example: 248 (USD to your currency)",
+        dailyBudget: "Daily ad budget ($)",
+        dailyBudgetPlaceholder: "Example: 20",
+        costPerOrder: "Cost per order (CPO) ($)",
+        costPerOrderPlaceholder: "Example: 2.5",
+        confirmationRate: "Confirmation rate (%)",
+        confirmationRatePlaceholder: "Example: 60",
+        deliveryRate: "Delivery rate (%)",
+        deliveryRatePlaceholder: "Example: 80",
+        additionalCosts: "Additional costs",
+        additionalCostsPlaceholder: "Example: 200",
+        desiredProfit: "Desired profit per order (optional)",
+        desiredProfitPlaceholder: "Example: 900",
+        desiredProfitHint: "Leave empty to use a default margin (~50%).",
+
+        calculateBtn: "Calculate ideal price",
+        recommendedPrice: "Recommended selling price",
+
+        netProfit: "Net profit per order",
+        dailyOrdersLabel: "Daily orders",
+        dailyProfitLabel: "Daily profit",
+        adCostLabel: "Ad cost / order",
+        totalCostLabel: "Total cost",
+        suggestedPriceLabel: "Selling price",
+        roiLabel: "ROI",
+
+        upgradeMessage: "This feature is locked in the free version",
+        upgradeNow: "Upgrade now",
+        refreshBtn: "Refresh / New calculation",
+
+        proTitle: "Pro version available now!",
+        proSubtitle: "Get advanced features for a complete and accurate analysis",
+        watchVideo: "Watch Pro tool tutorial",
+        contactWhatsApp: "Contact me on WhatsApp to get the Pro version",
+
+        proFeaturesTitle: "Pro features",
+        feature1: "Accurate confirmation & delivery rates",
+        feature2: "Return cost calculation (Retour)",
+        feature3: "Monthly projections (30 days)",
+        feature4: "Offers & discounts calculator",
+        feature5: "Interactive charts",
+
+        madeWith: "Made with ❤️ by",
+        currencyHint: "Results currency:"
+      },
+      fr: {
+        title: "Calculateur de Prix COD",
+        subtitle: "Calculez le prix idéal avec une interface premium",
+        freeBadge: "Version Gratuite",
+
+        productInfo: "Informations Produit",
+        productName: "Nom du produit (optionnel)",
+        productNamePlaceholder: "Exemple : Montre Intelligente",
+        wholesalePrice: "Prix d'achat en gros",
+        wholesalePricePlaceholder: "Exemple : 1200",
+        exchangeRate: "Taux de change",
+        exchangeHint: "Exemple : 248 (USD vers votre monnaie)",
+        dailyBudget: "Budget pub quotidien ($)",
+        dailyBudgetPlaceholder: "Exemple : 20",
+        costPerOrder: "Coût par commande (CPO) ($)",
+        costPerOrderPlaceholder: "Exemple : 2.5",
+        confirmationRate: "Taux de confirmation (%)",
+        confirmationRatePlaceholder: "Exemple : 60",
+        deliveryRate: "Taux de livraison (%)",
+        deliveryRatePlaceholder: "Exemple : 80",
+        additionalCosts: "Frais supplémentaires",
+        additionalCostsPlaceholder: "Exemple : 200",
+        desiredProfit: "Profit souhaité par commande (optionnel)",
+        desiredProfitPlaceholder: "Exemple : 900",
+        desiredProfitHint: "Laissez vide pour utiliser une marge par défaut (~50%).",
+
+        calculateBtn: "Calculer le prix idéal",
+        recommendedPrice: "Prix de vente recommandé",
+
+        netProfit: "Profit net par commande",
+        dailyOrdersLabel: "Commandes/jour",
+        dailyProfitLabel: "Profit/jour",
+        adCostLabel: "Coût pub/commande",
+        totalCostLabel: "Coût total",
+        suggestedPriceLabel: "Prix de vente",
+        roiLabel: "ROI",
+
+        upgradeMessage: "Fonction verrouillée en version gratuite",
+        upgradeNow: "Mettre à niveau",
+        refreshBtn: "Actualiser / Nouveau calcul",
+
+        proTitle: "Version Pro disponible maintenant !",
+        proSubtitle: "Obtenez des fonctionnalités avancées pour une analyse complète et précise",
+        watchVideo: "Voir le tuto de l'outil Pro",
+        contactWhatsApp: "Contactez-moi sur WhatsApp pour obtenir la version Pro",
+
+        proFeaturesTitle: "Fonctionnalités Pro",
+        feature1: "Taux de confirmation & livraison précis",
+        feature2: "Calcul du coût de retour (Retour)",
+        feature3: "Projections mensuelles (30 jours)",
+        feature4: "Calculateur d'offres & remises",
+        feature5: "Graphiques interactifs",
+
+        madeWith: "Fait avec ❤️ par",
+        currencyHint: "Devise des résultats :"
+      }
+    };
+
+    const currencyLabels = {
+      DZD: { ar: "دينار جزائري", en: "Algerian Dinar", fr: "Dinar Algérien" },
+      MAD: { ar: "درهم مغربي", en: "Moroccan Dirham", fr: "Dirham Marocain" },
+      TND: { ar: "دينار تونسي", en: "Tunisian Dinar", fr: "Dinar Tunisien" }
+    };
+
+    let currentLang = "ar";
+    let currentCurrency = "DZD";
+    let currentExchangeRate = 248;
+
+    function showToast(message){
+      const t = document.getElementById("toast");
+      t.textContent = message;
+      t.style.display = "block";
+      t.classList.add("fade-up");
+      setTimeout(()=>{ t.style.display = "none"; t.classList.remove("fade-up"); }, 2600);
+    }
+
+    function clamp(n, min, max){
+      n = Number.isFinite(n) ? n : 0;
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function changeLanguage(lang){
+      currentLang = lang;
+      document.documentElement.lang = lang;
+      document.documentElement.dir  = (lang === "ar") ? "rtl" : "ltr";
+
+      document.querySelectorAll("[data-lang]").forEach(btn=>{
+        btn.classList.toggle("active", btn.dataset.lang === lang);
+      });
+
+      document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.dataset.i18n;
+        if(translations[lang] && translations[lang][key] !== undefined){
+          el.textContent = translations[lang][key];
+        }
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+        const key = el.dataset.i18nPlaceholder;
+        if(translations[lang] && translations[lang][key] !== undefined){
+          el.placeholder = translations[lang][key];
+        }
+      });
+
+      document.getElementById("currencyHint").textContent =
+        `${translations[lang].currencyHint} ${currencyLabels[currentCurrency][lang]}`;
+
+      updateCurrencyLabels();
+    }
+
+    function changeCurrency(currency, rate){
+      currentCurrency = currency;
+      currentExchangeRate = Number(rate) || currentExchangeRate;
+
+      document.querySelectorAll("[data-currency]").forEach(btn=>{
+        const active = btn.dataset.currency === currency;
+        btn.classList.toggle("active", active);
+      });
+
+      document.getElementById("exchangeRate").value = currentExchangeRate;
+
+      document.getElementById("currencyHint").textContent =
+        `${translations[currentLang].currencyHint} ${currencyLabels[currentCurrency][currentLang]}`;
+
+      updateCurrencyLabels();
+    }
+
+    function updateCurrencyLabels(){
+      const label = currencyLabels[currentCurrency][currentLang];
+      document.getElementById("currencyLabel").textContent = label;
+      document.getElementById("recommendedCurrencyLabel").textContent = label;
+    }
+function toolUrl() {
+  // إذا الأداة على استضافة: سيأخذ الرابط الحقيقي
+  // وإذا فاتحها كملف: سيظهر file:// (الأفضل تحط رابط موقعك هنا)
+  return window.location.href;
+}
+
+function updateShareLinks(){
+  const url = toolUrl();
+  const text = "أداة تسعير للـ COD تساعدك تحسب السعر المثالي والربح بسرعة:\n" + url;
+  const wa = "https://wa.me/?text=" + encodeURIComponent(text);
+
+  const waLink = document.getElementById("waShareLink");
+  if (waLink) waLink.href = wa;
+}
+
+async function copyToolLink(){
+  const url = toolUrl();
+  const status = document.getElementById("shareStatus");
+
+  try{
+    // Clipboard API تشتغل أفضل على HTTPS أو localhost
+    await navigator.clipboard.writeText(url);
+    if(status) status.textContent = "تم نسخ الرابط ✅";
+  }catch(e){
+    // fallback قديم للمتصفحات/حالات عدم توفر clipboard
+    const t = document.createElement("textarea");
+    t.value = url;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    document.body.removeChild(t);
+    if(status) status.textContent = "تم نسخ الرابط ✅";
+  }
+}
+
+async function nativeShareTool(){
+  const url = toolUrl();
+  const status = document.getElementById("shareStatus");
+
+  // Web Share API تفتح “نافذة مشاركة” أصلية في الهاتف/الجهاز عند توفرها
+  if (navigator.share) {
+    try{
+      await navigator.share({
+        title: document.title,
+        text: "أداة تسعير COD تساعدك تحسب السعر المثالي والربح بسرعة",
+        url
+      });
+      if(status) status.textContent = "تم فتح المشاركة ✅";
+    }catch(e){
+      if(status) status.textContent = "تم إلغاء المشاركة";
+    }
+  } else {
+    if(status) status.textContent = "المشاركة غير مدعومة هنا — استخدم نسخ الرابط أو واتساب.";
+  }
+}
+
+    // ---------------------------
+    // Pro-lock timers (اختياري)
+    // ---------------------------
+    let timersStarted = false;
+    let confirmInterval = null;
+    let deliveryInterval = null;
+
+    function startLockTimers(){
+      if(timersStarted) return;
+      timersStarted = true;
+
+      let c = 60;
+      let d = 60;
+
+      const confirmTimerEl = document.getElementById("confirmTimer");
+      const deliveryTimerEl = document.getElementById("deliveryTimer");
+
+      confirmInterval = setInterval(()=>{
+        c--;
+        confirmTimerEl.textContent = String(Math.max(0,c));
+        if(c <= 0){
+          clearInterval(confirmInterval);
+          lockField("confirmationRate","confirmationLock");
+        }
+        checkBothLocked();
+      }, 1000);
+
+      deliveryInterval = setInterval(()=>{
+        d--;
+        deliveryTimerEl.textContent = String(Math.max(0,d));
+        if(d <= 0){
+          clearInterval(deliveryInterval);
+          lockField("deliveryRate","deliveryLock");
+        }
+        checkBothLocked();
+      }, 1000);
+
+      function checkBothLocked(){
+        const cl = document.getElementById("confirmationLock").style.display === "flex";
+        const dl = document.getElementById("deliveryLock").style.display === "flex";
+        if(cl && dl){
+          document.getElementById("refreshButton").classList.remove("hidden");
+        }
+      }
+    }
+
+    function lockField(inputId, overlayId){
+      const input = document.getElementById(inputId);
+      const overlay = document.getElementById(overlayId);
+      input.disabled = true;
+      input.value = 100;
+      overlay.style.display = "flex";
+    }
+
+    function refreshPage(){
+      location.reload();
+    }
+
+    // ---------------------------
+    // Calculation
+    // ---------------------------
+    function calculatePrice(){
+      const wholesalePrice = parseFloat(document.getElementById("wholesalePrice").value);
+      const exchangeRate   = parseFloat(document.getElementById("exchangeRate").value);
+      const dailyAdSpend   = parseFloat(document.getElementById("dailyAdSpend").value);
+      const costPerOrder   = parseFloat(document.getElementById("costPerOrder").value);
+      const confirmationRate = clamp(parseFloat(document.getElementById("confirmationRate").value), 0, 100);
+      const deliveryRate     = clamp(parseFloat(document.getElementById("deliveryRate").value), 0, 100);
+      const additionalCosts  = parseFloat(document.getElementById("additionalCosts").value);
+      const desiredProfit    = parseFloat(document.getElementById("desiredProfit").value);
+
+      if(!Number.isFinite(wholesalePrice) || wholesalePrice <= 0){
+        showToast(currentLang === "ar" ? "أدخل سعر شراء صحيح." : currentLang==="fr" ? "Entrez un prix d'achat valide." : "Enter a valid wholesale price.");
+        return;
+      }
+      if(!Number.isFinite(exchangeRate) || exchangeRate <= 0){
+        showToast(currentLang === "ar" ? "أدخل سعر صرف صحيح." : currentLang==="fr" ? "Entrez un taux de change valide." : "Enter a valid exchange rate.");
+        return;
+      }
+      if(!Number.isFinite(costPerOrder) || costPerOrder <= 0){
+        showToast(currentLang === "ar" ? "أدخل CPO صحيح (أكبر من 0)." : currentLang==="fr" ? "Entrez un CPO valide (>0)." : "Enter a valid CPO (>0).");
+        return;
+      }
+
+      const addCosts = Number.isFinite(additionalCosts) ? additionalCosts : 0;
+      const effC = confirmationRate / 100;
+      const effD = deliveryRate / 100;
+
+      const adCostLocal = costPerOrder * exchangeRate;
+      const adjustedAdCost = adCostLocal / Math.max(0.0001, (effC * effD));
+      const totalCost = wholesalePrice + adjustedAdCost + addCosts;
+
+      let suggestedPrice = 0;
+      let profitPerOrder = 0;
+
+      if(Number.isFinite(desiredProfit) && desiredProfit > 0){
+        profitPerOrder = desiredProfit;
+        suggestedPrice = totalCost + profitPerOrder;
+      } else {
+        suggestedPrice = totalCost * 1.5;
+        profitPerOrder = suggestedPrice - totalCost;
+      }
+
+      const dailySpendLocal = (Number.isFinite(dailyAdSpend) ? dailyAdSpend : 0) * exchangeRate;
+      const estDailyOrders = adCostLocal > 0
+        ? Math.floor((dailySpendLocal / adCostLocal) * effC * effD)
+        : 0;
+
+      const dailyProfit = profitPerOrder * estDailyOrders;
+      const roi = totalCost > 0 ? (profitPerOrder / totalCost) * 100 : 0;
+
+      document.getElementById("recommendedPriceSection").classList.remove("hidden");
+      document.getElementById("recommendedPriceValue").textContent = Math.round(suggestedPrice).toLocaleString();
+
+      document.getElementById("profitValue").textContent = Math.round(profitPerOrder).toLocaleString();
+      document.getElementById("dailyOrders").textContent = estDailyOrders.toLocaleString();
+      document.getElementById("dailyProfit").textContent = Math.round(dailyProfit).toLocaleString();
+      document.getElementById("adCost").textContent = Math.round(adjustedAdCost).toLocaleString();
+      document.getElementById("totalCost").textContent = Math.round(totalCost).toLocaleString();
+      document.getElementById("suggestedPrice").textContent = Math.round(suggestedPrice).toLocaleString();
+      document.getElementById("roi").textContent = `${roi.toFixed(1)}%`;
+
+      const hint = document.getElementById("profitHint");
+      const profitEl = document.getElementById("profitValue");
+
+      if(profitPerOrder <= 0){
+        hint.textContent = (currentLang === "ar") ? "تنبيه: الربح سلبي — راجع CPO أو الهامش." :
+                           (currentLang === "fr") ? "Alerte : profit négatif — revoyez le CPO ou la marge." :
+                           "Warning: negative profit — review CPO or margin.";
+        profitEl.style.background = "linear-gradient(135deg, var(--bad), #b91c1c)";
+      } else if(profitPerOrder < 500){
+        hint.textContent = (currentLang === "ar") ? "الربح منخفض — جرّب تحسين التأكيد/التسليم أو زيادة الهامش." :
+                           (currentLang === "fr") ? "Profit faible — optimisez la confirmation/livraison ou augmentez la marge." :
+                           "Low profit — optimize confirmation/delivery or increase margin.";
+        profitEl.style.background = "linear-gradient(135deg, var(--warn), #d97706)";
+      } else {
+        hint.textContent = (currentLang === "ar") ? "ممتاز — الربح جيد." :
+                           (currentLang === "fr") ? "Excellent — bon profit." :
+                           "Great — good profit.";
+        profitEl.style.background = "linear-gradient(135deg, var(--brand1), var(--brand2), var(--brand3))";
+      }
+      profitEl.style.webkitBackgroundClip = "text";
+      profitEl.style.webkitTextFillColor = "transparent";
+      profitEl.style.backgroundClip = "text";
+
+      const res = document.getElementById("resultsSection");
+      res.classList.remove("results-dim");
+      res.classList.add("results-live");
+
+      startLockTimers();
+      updateCurrencyLabels();
+    }
+
+    // ---------------------------
+    // Init
+    // ---------------------------
+    (function init(){
+      document.getElementById("exchangeRate").value = currentExchangeRate;
+      changeLanguage("ar");
+      changeCurrency("DZD", 248);
+    })();
+  </script>
+</body>
+</html>
