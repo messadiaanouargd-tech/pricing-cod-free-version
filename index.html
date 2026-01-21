@@ -90,6 +90,21 @@
       box-shadow: 0 22px 70px rgba(0,0,0,.50);
       backdrop-filter: blur(18px);
     }
+/* تحسين الأداء على الهواتف */
+@media (max-width: 768px) {
+  .glass {
+    backdrop-filter: blur(8px);
+  }
+  
+  .glass-strong {
+    backdrop-filter: blur(10px);
+  }
+  
+  /* إلغاء الأنيميشن للـ blobs على الهواتف */
+  .blob {
+    animation: none;
+  }
+}
 
     .gradient-text{
       background: linear-gradient(135deg, var(--brand1), var(--brand2), var(--brand3));
@@ -1063,6 +1078,7 @@ async function nativeShareTool(){
   </script>
 </body>
 </html>
+
 
 
 
